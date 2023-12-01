@@ -6,7 +6,7 @@ let targets: [Target] = [
         platform: .iOS,
         product: .framework,
         bundleId: "com.seunghun.haebitui",
-        deploymentTarget: .iOS(targetVersion: "15.0", devices: [.iphone]),
+        deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone]),
         sources: ["HaebitUI/Sources/**"],
         dependencies: [
             .package(product: "SnapKit", type: .runtime),
@@ -17,7 +17,7 @@ let targets: [Target] = [
         platform: .iOS,
         product: .app,
         bundleId: "com.seunghun.haebitui.demo",
-        deploymentTarget: .iOS(targetVersion: "15.0", devices: [.iphone]),
+        deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone]),
         infoPlist: .extendingDefault(with: ["UILaunchStoryboardName": "LaunchScreen",]),
         sources: ["HaebitUIDemo/Sources/**"],
         resources: ["HaebitUIDemo/Resources/**"],

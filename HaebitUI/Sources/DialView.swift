@@ -10,41 +10,55 @@ import UIKit
 import SnapKit
 import SwiftUI
 
-public struct HaebitDial: UIViewRepresentable {
-    @Binding var selection: DialEntry
-    var data: [DialEntry]
-    
-    public class Coordinator: DialViewDelegate {
-        var parent: HaebitDial
+struct DialViewRepresentable<ContentLabel, SelectionValue>: UIViewRepresentable where ContentLabel: View, SelectionValue: Hashable {
+    class Coordinator: NSObject, DialViewDelegate, UICollectionViewDataSource {
+        var parent: DialViewRepresentable
         
-        init(_ parent: HaebitDial) {
+        init(_ parent: DialViewRepresentable) {
             self.parent = parent
         }
         
-        func dialView(_ dialView: DialView, didSelectEntry: DialEntry) {
-            parent.selection = didSelectEntry
+        func dialView(_ dialView: DialView, didSelectIndex index: Int) {
+            parent.selection = parent.data[index]
+        }
+        
+        func collectionView(
+            _ collectionView: UICollectionView,
+            numberOfItemsInSection section: Int
+        ) -> Int {
+            parent.data.count
+        }
+        
+        func collectionView(
+            _ collectionView: UICollectionView,
+            cellForItemAt indexPath: IndexPath
+        ) -> UICollectionViewCell {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: DialViewCell.id, for: indexPath)
+            guard let dialViewCell = cell as? DialViewCell else { return cell }
+            let data = parent.data[indexPath.item]
+            cell.contentConfiguration = UIHostingConfiguration { parent.content(data) }
+            return dialViewCell
         }
     }
     
-    public init(data: [DialEntry], selection: Binding<DialEntry>) {
-        self._selection = selection
-        self.data = data
-    }
+    var data: [SelectionValue]
+    @Binding var selection: SelectionValue
+    var content: (SelectionValue) -> ContentLabel
     
-    public func updateUIView(_ uiView: UIViewType, context: Context) {
+    func updateUIView(_ uiView: UIViewType, context: Context) {
         guard let dialView = uiView as? DialView else { return }
-        dialView.data = data
-        dialView.select(entry: selection)
-        print(data, selection)
+        dialView.reload()
+        dialView.select(index: data.firstIndex(of: selection))
     }
     
-    public func makeUIView(context: Context) -> some UIView {
+    func makeUIView(context: Context) -> some UIView {
         let view = DialView()
         view.delegate = context.coordinator
+        view.dataSource = context.coordinator
         return view
     }
     
-    public func makeCoordinator() -> Coordinator {
+    func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
 }
@@ -54,47 +68,16 @@ final class DialViewCell: UICollectionViewCell {
     
     var shouldTickleAscending = true
     var shouldTickleDescending = true
-    var title: String = "" { didSet { titleLabel.text = title } }
-    
-    private lazy var titleLabel: UILabel = {
-        let view = UILabel()
-        view.font = .systemFont(ofSize: 18, weight: .bold)
-        return view
-    }()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupViews()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
     
     override func prepareForReuse() {
         super.prepareForReuse()
         shouldTickleAscending = true
         shouldTickleDescending = true
     }
-    
-    private func setupViews() {
-        contentView.addSubview(titleLabel)
-        titleLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-    }
-}
-
-public struct DialEntry: Hashable {
-    public let title: String
-    
-    public init(title: String) {
-        self.title = title
-    }
 }
 
 protocol DialViewDelegate: AnyObject {
-    func dialView(_ dialView: DialView, didSelectEntry: DialEntry)
+    func dialView(_ dialView: DialView, didSelectIndex index: Int)
 }
 
 final class DialView: UIView {
@@ -113,17 +96,15 @@ final class DialView: UIView {
         view.decelerationRate = .init(rawValue: .zero)
         view.bounces = false
         view.isSpringLoaded = false
-        view.backgroundColor = .darkGray
         view.delegate = self
-        view.dataSource = self
+        view.backgroundColor = .clear
         return view
     }()
     
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .heavy)
     
-    public var data: [DialEntry] = []
-    
     weak var delegate: DialViewDelegate?
+    weak var dataSource: UICollectionViewDataSource? { didSet { collectionView.dataSource = dataSource } }
     
     init() {
         super.init(frame: .zero)
@@ -148,9 +129,13 @@ final class DialView: UIView {
         }
     }
     
-    func select(entry: DialEntry) {
-        guard let item = (data.firstIndex { $0 == entry }) else { return }
-        let indexPath = IndexPath(item: item, section: .zero)
+    func reload() {
+        collectionView.reloadData()
+    }
+    
+    func select(index: Int?) {
+        guard let index else { return }
+        let indexPath = IndexPath(item: index, section: .zero)
         collectionView.layoutIfNeeded()
         collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
     }
@@ -175,7 +160,7 @@ extension DialView: UIScrollViewDelegate {
         let offset = CGPoint(x: scrollView.contentOffset.x + frame.width / 2.0, y: scrollView.contentOffset.y)
         guard let indexPath = collectionView.indexPathForItem(at: offset) else { return }
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-        delegate?.dialView(self, didSelectEntry: data[indexPath.item])
+        delegate?.dialView(self, didSelectIndex: indexPath.item)
     }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
@@ -183,35 +168,8 @@ extension DialView: UIScrollViewDelegate {
         let offset = CGPoint(x: scrollView.contentOffset.x + frame.width / 2.0, y: scrollView.contentOffset.y)
         guard let indexPath = collectionView.indexPathForItem(at: offset) else { return }
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-        delegate?.dialView(self, didSelectEntry: data[indexPath.item])
+        delegate?.dialView(self, didSelectIndex: indexPath.item)
     }
 }
 
 extension DialView: UICollectionViewDelegate {}
-
-extension DialView: UICollectionViewDataSource {
-    func collectionView(
-        _ collectionView: UICollectionView,
-        numberOfItemsInSection section: Int
-    ) -> Int {
-        data.count
-    }
-    
-    func collectionView(
-        _ collectionView: UICollectionView,
-        cellForItemAt indexPath: IndexPath
-    ) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: DialViewCell.id, for: indexPath)
-        guard let dialViewCell = cell as? DialViewCell else { return cell }
-        dialViewCell.contentView.backgroundColor = .systemPink
-        dialViewCell.title = data[indexPath.item].title
-        return dialViewCell
-    }
-}
-
-@available(iOS 17, *)
-#Preview(traits: .fixedLayout(width: 300, height: 30)) {
-    let view = DialView()
-    view.data = [1.0, 1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22].map { DialEntry(title: "\($0)") }
-    return view
-}
