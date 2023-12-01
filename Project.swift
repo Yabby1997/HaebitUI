@@ -7,7 +7,10 @@ let targets: [Target] = [
         product: .framework,
         bundleId: "com.seunghun.haebitui",
         deploymentTarget: .iOS(targetVersion: "15.0", devices: [.iphone]),
-        sources: ["HaebitUI/Sources/**"]
+        sources: ["HaebitUI/Sources/**"],
+        dependencies: [
+            .package(product: "SnapKit", type: .runtime),
+        ]
     ),
     Target(
         name: "HaebitUIDemo",
@@ -19,7 +22,7 @@ let targets: [Target] = [
         sources: ["HaebitUIDemo/Sources/**"],
         resources: ["HaebitUIDemo/Resources/**"],
         dependencies: [
-            .target(name: "HaebitUI")
+            .target(name: "HaebitUI"),
         ],
         settings: .settings(
             base: ["DEVELOPMENT_TEAM": "5HZQ3M82FA"],
@@ -32,5 +35,8 @@ let targets: [Target] = [
 let project = Project(
     name: "HaebitUI",
     organizationName: "seunghun",
+    packages: [
+        .remote(url: "https://github.com/SnapKit/SnapKit", requirement: .exact("5.6.0")),
+    ],
     targets: targets
 )
