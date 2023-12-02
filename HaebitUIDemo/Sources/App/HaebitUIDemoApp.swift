@@ -7,12 +7,18 @@
 //
 
 import SwiftUI
+import HaebitUI
 
 @main
 struct HaebitUIDemoApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(
+                    HaebitApertureRingDependencies(
+                        feedbackProvidable: DefaultFeedbackProvidable()
+                    )
+                )
         }
     }
 }

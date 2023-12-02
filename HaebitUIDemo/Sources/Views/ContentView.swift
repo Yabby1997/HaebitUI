@@ -11,7 +11,7 @@ import HaebitUI
 
 struct ContentView: View {
     @State var selection: Float = 1.4
-    var data: [Float] = [1.0, 1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22]
+    var entries: [Float] = [1.0, 1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22]
     
     var body: some View {
         VStack {
@@ -20,9 +20,12 @@ struct ContentView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
             Spacer()
-            HaebitDial(data: data, selection: $selection) {
+            HaebitApertureRing(
+                selection: $selection,
+                entries: entries
+            ) {
                 Circle().foregroundStyle(.red)
-            } contentLabel: { data in
+            } content: { data in
                 Text(String(format: "%.1f", data))
                     .fontWeight(.bold)
                     .foregroundStyle(.white)
@@ -41,4 +44,9 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(
+            HaebitApertureRingDependencies(
+                feedbackProvidable: DefaultFeedbackProvidable()
+            )
+        )
 }
