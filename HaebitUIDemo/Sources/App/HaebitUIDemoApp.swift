@@ -13,7 +13,7 @@ import HaebitUI
 struct HaebitUIDemoApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ApertureRingDemoView()
                 .environmentObject(
                     HaebitApertureRingDependencies(
                         feedbackProvidable: DefaultFeedbackProvidable()

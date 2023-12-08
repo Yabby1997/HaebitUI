@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  ApertureRingDemoView.swift
 //  HaebitUI
 //
 //  Created by Seunghun on 11/30/23.
@@ -9,7 +9,7 @@
 import SwiftUI
 import HaebitUI
 
-struct ContentView: View {
+struct ApertureRingDemoView: View {
     @State var selection: Float = 1.4
     var entries: [Float] = [1.0, 1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22]
     
@@ -43,7 +43,7 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ApertureRingDemoView()
         .environmentObject(
             HaebitApertureRingDependencies(
                 feedbackProvidable: DefaultFeedbackProvidable()
