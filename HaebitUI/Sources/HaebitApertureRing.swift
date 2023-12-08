@@ -45,6 +45,15 @@ public struct HaebitApertureRing<Indicator, Content, Entry>: View where Indicato
     }
 }
 
+extension HaebitApertureRing: Equatable {
+    public static func == (
+        lhs: HaebitApertureRing<Indicator, Content, Entry>,
+        rhs: HaebitApertureRing<Indicator, Content, Entry>
+    ) -> Bool {
+        lhs.entries == rhs.entries && lhs.selection == rhs.selection
+    }
+}
+
 #Preview {
     HaebitApertureRing(
         selection: .constant("복숭아"),
