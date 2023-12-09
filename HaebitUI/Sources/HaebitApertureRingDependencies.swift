@@ -8,9 +8,14 @@
 
 import Foundation
 
+/// Dependencies for ``HaebitApertureRing``.
 public final class HaebitApertureRingDependencies: ObservableObject {
     let feedbackProvidable: HaebitApertureRingFeedbackProvidable
     
+    /// Creates a new instance of `HaebitApertureRingDependencies`.
+    ///
+    /// - Parameters:
+    ///     - feedbackProvidable: An instance of implementation of ``HaebitApertureRingFeedbackProvidable``.
     public init(feedbackProvidable: HaebitApertureRingFeedbackProvidable) {
         self.feedbackProvidable = feedbackProvidable
     }

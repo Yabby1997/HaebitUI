@@ -8,18 +8,28 @@
 
 import SwiftUI
 
+/// An aperture ring styled value picker.
 public struct HaebitApertureRing<Indicator, Content, Entry>: View where Indicator: View, Content: View, Entry: Hashable {
-    @Binding var selection: Entry
-    let entries: [Entry]
-    let centerIndicator: () -> Indicator
-    let content: (Entry) -> Content
-    @EnvironmentObject var dependencies: HaebitApertureRingDependencies
+    @Binding private var selection: Entry
+    private let entries: [Entry]
+    private let centerIndicator: () -> Indicator
+    private let content: (Entry) -> Content
+    @EnvironmentObject private var dependencies: HaebitApertureRingDependencies
     
+    /// Creates an aperture ring that displays center indicator and each entry's content.
+    ///
+    /// - Note: Provide ``HaebitApertureRingDependencies`` as using ``environmentObject(_:)``.
+    ///
+    /// - Parameters:
+    ///     - selection: The value that determines the currently selected entry.
+    ///     - entries: An array of values used as the entries for aperture ring.
+    ///     - centerIndicator: A view that indicates the center point of aperture ring.
+    ///     - content: A view that describes each entry of aperture ring.
     public init(
         selection: Binding<Entry>,
         entries: [Entry],
-        centerIndicator: @escaping () -> Indicator,
-        content: @escaping (Entry) -> Content
+        @ViewBuilder centerIndicator: @escaping () -> Indicator,
+        @ViewBuilder content: @escaping (Entry) -> Content
     ) {
         self._selection = selection
         self.entries = entries
