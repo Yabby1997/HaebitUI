@@ -28,7 +28,7 @@ public struct HaebitApertureRing<Indicator, Content, Entry>: View where Indicato
     public init(
         selection: Binding<Entry>,
         entries: [Entry],
-        @ViewBuilder centerIndicator: @escaping () -> Indicator,
+        @ViewBuilder centerIndicator: @escaping () -> Indicator = { EmptyView() },
         @ViewBuilder content: @escaping (Entry) -> Content
     ) {
         self._selection = selection
@@ -40,7 +40,6 @@ public struct HaebitApertureRing<Indicator, Content, Entry>: View where Indicato
     public var body: some View {
         VStack(spacing: .zero) {
             centerIndicator()
-                .frame(width: 5, height: 5)
             ZStack {
                 EmptyView()
                 ApertureRing(
