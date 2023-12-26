@@ -101,6 +101,8 @@ final class ApertureRingView: UIView {
     private let selectionCallback: (Int) -> Void
     
     private let cellWidth: CGFloat = 60
+    
+    private var currentIndex: Int = .zero
 
     init(
         feedbackProvidable: HaebitApertureRingFeedbackProvidable,
@@ -140,6 +142,7 @@ final class ApertureRingView: UIView {
     }
     
     func select(index: Int) {
+        guard currentIndex != index else { return }
         collectionView.scrollToItem(
             at: IndexPath(item: index, section: .zero),
             at: .centeredHorizontally,
@@ -157,14 +160,17 @@ extension ApertureRingView: UICollectionViewDelegate {
               let cell = collectionView.cellForItem(at: indexPath) as? ApertureRingViewCell,
               (cell.center.x - (frame.width / 4.0)...cell.center.x + (frame.width / 4.0)).contains(offset.x),
               (isOpening ? cell.shouldClickForOpening : cell.shouldClickForClosing) else { return }
+        currentIndex = indexPath.item
         feedbackProvidable.generateClickingFeedback()
         cell.shouldClickForOpening = !isOpening
         cell.shouldClickForClosing = isOpening
+        selectionCallback(indexPath.item)
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         let offset = CGPoint(x: scrollView.contentOffset.x + frame.width / 2.0, y: scrollView.contentOffset.y)
         guard let indexPath = collectionView.indexPathForItem(at: offset) else { return }
+        currentIndex = indexPath.item
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         selectionCallback(indexPath.item)
     }
@@ -173,6 +179,7 @@ extension ApertureRingView: UICollectionViewDelegate {
         guard !decelerate else { return }
         let offset = CGPoint(x: scrollView.contentOffset.x + frame.width / 2.0, y: scrollView.contentOffset.y)
         guard let indexPath = collectionView.indexPathForItem(at: offset) else { return }
+        currentIndex = indexPath.item
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         selectionCallback(indexPath.item)
     }

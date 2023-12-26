@@ -69,6 +69,7 @@ extension HaebitApertureRing: Equatable {
         entries: ["사과", "딸기", "포도", "망고", "키위", "참외", "수박", "메론", "감귤"]
     ){
         Color(.green)
+            .frame(width: 5, height: 5)
     } content: { data in
         Text(data)
     }
