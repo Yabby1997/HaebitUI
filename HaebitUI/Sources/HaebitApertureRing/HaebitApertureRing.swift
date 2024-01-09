@@ -75,7 +75,7 @@ extension HaebitApertureRing: Equatable {
     }
     .environmentObject(
         HaebitApertureRingDependencies(
-            feedbackProvidable: DefaultFeedbackProvidable()
+            feedbackProvidable: DefaultApertureRingFeedbackProvider()
         )
     )
 }

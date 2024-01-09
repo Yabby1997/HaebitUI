@@ -24,7 +24,9 @@ struct ApertureRingDemoView: View {
                 selection: $selection,
                 entries: entries
             ) {
-                Circle().foregroundStyle(.red)
+                Circle()
+                    .frame(width: 5, height: 5)
+                    .foregroundStyle(.red)
             } content: { data in
                 Text(String(format: "%.1f", data))
                     .fontWeight(.bold)
@@ -46,7 +48,7 @@ struct ApertureRingDemoView: View {
     ApertureRingDemoView()
         .environmentObject(
             HaebitApertureRingDependencies(
-                feedbackProvidable: DefaultFeedbackProvidable()
+                feedbackProvidable: DefaultApertureRingFeedbackProvider()
             )
         )
 }

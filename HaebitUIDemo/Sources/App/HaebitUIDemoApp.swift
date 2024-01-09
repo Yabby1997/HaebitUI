@@ -13,12 +13,26 @@ import HaebitUI
 struct HaebitUIDemoApp: App {
     var body: some Scene {
         WindowGroup {
-            ApertureRingDemoView()
-                .environmentObject(
-                    HaebitApertureRingDependencies(
-                        feedbackProvidable: DefaultFeedbackProvidable()
+            TabView {
+                ApertureRingDemoView()
+                    .environmentObject(
+                        HaebitApertureRingDependencies(
+                            feedbackProvidable: DefaultApertureRingFeedbackProvider()
+                        )
                     )
-                )
+                    .tabItem {
+                        Text("Ring")
+                    }
+                ShutterButtonDemoView()
+                    .environmentObject(
+                        HaebitShutterButtonDependencies(
+                            feedbackProvidable: DefaultShutterButtonFeedbackProvider()
+                        )
+                    )
+                    .tabItem {
+                        Text("Shutter")
+                    }
+            }
         }
     }
 }
