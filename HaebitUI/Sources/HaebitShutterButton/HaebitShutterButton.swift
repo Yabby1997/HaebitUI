@@ -14,24 +14,32 @@ public struct HaebitShutterButton: View {
     @Binding private var shutterSpeed: UInt64
     private let maximumShutterSpeed: UInt64
     private let shutterLag: UInt64
-    private let completion: () -> Void
+    private let action: () -> Void
+    private let completion: (() -> Void)?
     
     public var body: some View {
         Button {
             Task {
+                action()
                 isTaskRunning = true
                 dependencies.feedbackProvidable.generateClickingFeedback()
                 try? await Task.sleep(nanoseconds: shutterLag)
                 dependencies.feedbackProvidable.generateOpeningFeedback()
                 try? await Task.sleep(nanoseconds: min(shutterSpeed, maximumShutterSpeed))
                 dependencies.feedbackProvidable.generateClosingFeedback()
-                completion()
                 isTaskRunning = false
+                completion?()
             }
         } label: {
             Circle()
                 .frame(width: 50, height: 50)
                 .foregroundStyle(.red)
+                .overlay(
+                    Circle()
+                        .fill(.shadow(.inner(color: .black.opacity(0.5), radius: 10, x: 7, y: 7)))
+                        .frame(width: 44, height: 44)
+                        .foregroundStyle(.red)
+                )
         }
         .disabled(isTaskRunning)
     }
@@ -40,11 +48,13 @@ public struct HaebitShutterButton: View {
         shutterSpeed: Binding<UInt64>,
         maximumShutterSpeed: UInt64 = 1_000_000_000,
         shutterLag: UInt64 = 50_000_000,
-        completion: @escaping () -> Void
+        action: @escaping () -> Void,
+        completion: (() -> Void)? = nil
     ) {
         self._shutterSpeed = shutterSpeed
         self.maximumShutterSpeed = maximumShutterSpeed
         self.shutterLag = shutterLag
+        self.action = action
         self.completion = completion
     }
 }

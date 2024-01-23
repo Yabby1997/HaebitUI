@@ -10,6 +10,7 @@ import SwiftUI
 import HaebitUI
 
 struct ShutterButtonDemoView: View {
+    @State var isCapturing = false
     @State var shutterSpeed: UInt64 = 1_000_000_000
     let shutterSpeeds: [UInt64] = [
         16_666_667,
@@ -31,10 +32,14 @@ struct ShutterButtonDemoView: View {
               }
             }
             .pickerStyle(.wheel)
+            .disabled(isCapturing)
             HaebitShutterButton(shutterSpeed: $shutterSpeed) {
-                print("!!")
+                isCapturing = true
+            } completion: {
+                isCapturing = false
             }
         }
+        .background(isCapturing ? .green : .clear)
     }
 }
 
