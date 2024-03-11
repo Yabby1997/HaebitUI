@@ -10,6 +10,7 @@ import Foundation
 
 /// Dependencies for ``HaebitApertureRing``.
 public final class HaebitApertureRingDependencies: ObservableObject {
+    /// A ``HaebitApertureRingFeedbackProvidable`` instance for aperture ring dependency.
     let feedbackProvidable: HaebitApertureRingFeedbackProvidable
     
     /// Creates a new instance of `HaebitApertureRingDependencies`.

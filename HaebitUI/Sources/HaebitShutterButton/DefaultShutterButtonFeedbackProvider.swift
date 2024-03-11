@@ -8,11 +8,13 @@
 
 import UIKit
 
+/// Default implementation of ``HaebitShutterButtonFeedbackProvidable``.
 public class DefaultShutterButtonFeedbackProvider: HaebitShutterButtonFeedbackProvidable {
     private let lightFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
     private let rigidFeedbackGenerator = UIImpactFeedbackGenerator(style: .rigid)
     private let heavyFeedbackGenerator = UIImpactFeedbackGenerator(style: .heavy)
     
+    /// Creates a new instance of the ``DefaultShutterButtonFeedbackProvider``.
     public init() {}
 
     public func generateClickingFeedback() {

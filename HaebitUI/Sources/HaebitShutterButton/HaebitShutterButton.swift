@@ -8,6 +8,7 @@
 
 import SwiftUI
 
+/// A shutter button styled button.
 public struct HaebitShutterButton: View {
     @EnvironmentObject private var dependencies: HaebitShutterButtonDependencies
     @State private var isTaskRunning: Bool = false
@@ -44,6 +45,14 @@ public struct HaebitShutterButton: View {
         .disabled(isTaskRunning)
     }
     
+    /// Creates an shutter button.
+    ///
+    /// - Parameters:
+    ///     - shutterSpeed: Shutter speed value to generate feedback in nano seconds.
+    ///     - maximumShutterSpeed: Upper limit for `shutterSpeed` to generate feedback in nano seconds.
+    ///     - shutterLag: A shutter lag value in nano seconds.
+    ///     - action: A closure to handle the button's tap action.
+    ///     - completion: A completion handler which called at the completion of shutter feedback.
     public init(
         shutterSpeed: Binding<UInt64>,
         maximumShutterSpeed: UInt64 = 1_000_000_000,

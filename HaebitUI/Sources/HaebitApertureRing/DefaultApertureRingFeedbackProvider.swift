@@ -13,7 +13,7 @@ import UIKit
 public class DefaultApertureRingFeedbackProvider: HaebitApertureRingFeedbackProvidable {
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .heavy)
     
-    /// Creates a new instance of the `DefaultApertureRingFeedbackProvider`.
+    /// Creates a new instance of the ``DefaultApertureRingFeedbackProvider``.
     public init() {}
 
     public func generateClickingFeedback() {
