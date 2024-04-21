@@ -9,6 +9,7 @@
 import Foundation
 
 /// A protocol that enables providing feedback for ``HaebitShutterButton``.
+@MainActor
 public protocol HaebitShutterButtonFeedbackProvidable {
     /// A method that is invoked when clicking feedback is needed.
     func generateClickingFeedback()

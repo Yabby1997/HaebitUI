@@ -7,7 +7,10 @@ let targets: [Target] = [
         product: .framework,
         bundleId: "com.seunghun.haebitui",
         deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone]),
-        sources: ["HaebitUI/Sources/**"]
+        sources: ["HaebitUI/Sources/**"],
+        settings: .settings(
+            base: ["SWIFT_STRICT_CONCURRENCY": "complete"]
+        )
     ),
     Target(
         name: "HaebitUIDemo",
@@ -22,8 +25,10 @@ let targets: [Target] = [
             .target(name: "HaebitUI"),
         ],
         settings: .settings(
-            base: ["DEVELOPMENT_TEAM": "5HZQ3M82FA"],
-            configurations: [],
+            base: [
+                "DEVELOPMENT_TEAM": "5HZQ3M82FA",
+                "SWIFT_STRICT_CONCURRENCY": "complete"
+            ],
             defaultSettings: .recommended
         )
     )

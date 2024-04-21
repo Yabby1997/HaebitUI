@@ -9,6 +9,7 @@
 import Foundation
 
 /// A protocol that enables providing feedback for ``HaebitApertureRing``.
+@MainActor
 public protocol HaebitApertureRingFeedbackProvidable {
     /// A method that is invoked when clicking feedback is needed.
     func generateClickingFeedback()
