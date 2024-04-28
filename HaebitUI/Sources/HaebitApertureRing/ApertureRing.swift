@@ -142,7 +142,8 @@ final class ApertureRingView: UIView {
     }
     
     func select(index: Int) {
-        guard currentIndex != index else { return }
+        guard index < collectionView.numberOfItems(inSection: .zero),
+              currentIndex != index else { return }
         collectionView.scrollToItem(
             at: IndexPath(item: index, section: .zero),
             at: .centeredHorizontally,
