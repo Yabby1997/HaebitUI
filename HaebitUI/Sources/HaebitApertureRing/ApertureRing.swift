@@ -37,7 +37,7 @@ struct ApertureRing<Content, Entry>: UIViewRepresentable where Content: View, En
     }
     
     @Binding var selection: Entry
-    let entries: [Entry]
+    @Binding var entries: [Entry]
     let feedbackProvidable: HaebitApertureRingFeedbackProvidable
     let content: (Entry) -> Content
     
