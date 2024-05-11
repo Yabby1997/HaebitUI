@@ -11,7 +11,7 @@ import HaebitUI
 
 struct ApertureRingDemoView: View {
     @State var selection: Float = 1.4
-    var entries: [Float] = [1.0, 1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22]
+    @State var entries: [Float] = [1.0, 1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22]
     
     var body: some View {
         VStack {
@@ -22,7 +22,7 @@ struct ApertureRingDemoView: View {
             Spacer()
             HaebitApertureRing(
                 selection: $selection,
-                entries: entries
+                entries: $entries
             ) {
                 Circle()
                     .frame(width: 5, height: 5)
