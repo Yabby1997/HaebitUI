@@ -103,6 +103,9 @@ final class ApertureRingView: UIView {
     private let cellWidth: CGFloat = 60
     
     private var currentIndex: Int = .zero
+    private var lastContentOffset: CGPoint = .zero
+    private var lastTime: TimeInterval = 0.0
+    private var scrollSpeedX: CGFloat = 0.0
 
     init(
         feedbackProvidable: HaebitApertureRingFeedbackProvidable,
@@ -153,8 +156,21 @@ final class ApertureRingView: UIView {
 }
 
 extension ApertureRingView: UICollectionViewDelegate {
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        lastContentOffset = scrollView.contentOffset
+        lastTime = Date().timeIntervalSince1970
+    }
+    
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let isOpening = scrollView.panGestureRecognizer.velocity(in: self).x > .zero
+        let currentTime = Date().timeIntervalSince1970
+        let timeInterval = currentTime - lastTime
+        guard timeInterval > 0 else { return }
+        let currentOffset = scrollView.contentOffset
+        scrollSpeedX = (currentOffset.x - lastContentOffset.x) / CGFloat(timeInterval)
+        lastContentOffset = currentOffset
+        lastTime = currentTime
+        
+        let isOpening = scrollSpeedX > .zero
         let offset = CGPoint(x: scrollView.contentOffset.x + frame.width / 2.0, y: scrollView.contentOffset.y)
         
         guard let indexPath = collectionView.indexPathForItem(at: offset),

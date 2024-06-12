@@ -64,9 +64,11 @@ extension HaebitApertureRing: Equatable {
 }
 
 #Preview {
-    HaebitApertureRing(
-        selection: .constant("복숭아"),
-        entries: .constant(["사과", "딸기", "포도", "망고", "키위", "참외", "수박", "메론", "감귤"])
+    @State var selection = "복숭아"
+    @State var entries = ["사과", "딸기", "포도", "망고", "키위", "복숭아", "참외", "수박", "메론", "감귤"]
+    return HaebitApertureRing(
+        selection: $selection,
+        entries: $entries
     ){
         Color(.green)
             .frame(width: 5, height: 5)
