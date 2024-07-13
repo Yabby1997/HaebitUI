@@ -11,17 +11,22 @@ import SwiftUI
 
 struct ApertureRing<Content, Entry>: UIViewRepresentable where Content: View, Entry: Hashable {
     class Coordinator: NSObject, UICollectionViewDataSource {
-        var parent: ApertureRing
+        var entries: [Entry] = []
+        var content: (Entry) -> Content
         
-        init(_ parent: ApertureRing) {
-            self.parent = parent
+        init(
+            entries: [Entry],
+            content: @escaping (Entry) -> Content
+        ) {
+            self.entries = entries
+            self.content = content
         }
         
         func collectionView(
             _ collectionView: UICollectionView,
             numberOfItemsInSection section: Int
         ) -> Int {
-            parent.entries.count
+            entries.count
         }
         
         func collectionView(
@@ -30,8 +35,8 @@ struct ApertureRing<Content, Entry>: UIViewRepresentable where Content: View, En
         ) -> UICollectionViewCell {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ApertureRingViewCell.id, for: indexPath)
             guard let cell = cell as? ApertureRingViewCell else { return cell }
-            let data = parent.entries[indexPath.item]
-            cell.contentConfiguration = UIHostingConfiguration { parent.content(data) }
+            let data = entries[indexPath.item]
+            cell.contentConfiguration = UIHostingConfiguration { content(data) }
             return cell
         }
     }
@@ -44,10 +49,13 @@ struct ApertureRing<Content, Entry>: UIViewRepresentable where Content: View, En
     func updateUIView(_ uiView: UIViewType, context: Context) {
         guard let apertureRingView = uiView as? ApertureRingView,
               let index = entries.firstIndex(of: selection) else { return }
+        context.coordinator.content = content
+        context.coordinator.entries = entries
         apertureRingView.reload()
         apertureRingView.select(index: index)
     }
     
+    // TODO: Handle exception for invalid index due to entry update.
     func makeUIView(context: Context) -> some UIView {
         ApertureRingView(
             feedbackProvidable: feedbackProvidable,
@@ -58,7 +66,7 @@ struct ApertureRing<Content, Entry>: UIViewRepresentable where Content: View, En
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator(entries: entries, content: content)
     }
 }
 
