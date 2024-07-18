@@ -10,63 +10,27 @@ import UIKit
 import SwiftUI
 
 struct ApertureRing<Content, Entry>: UIViewRepresentable where Content: View, Entry: Hashable {
-    class Coordinator: NSObject, UICollectionViewDataSource {
-        var entries: [Entry] = []
-        var content: (Entry) -> Content
-        
-        init(
-            entries: [Entry],
-            content: @escaping (Entry) -> Content
-        ) {
-            self.entries = entries
-            self.content = content
-        }
-        
-        func collectionView(
-            _ collectionView: UICollectionView,
-            numberOfItemsInSection section: Int
-        ) -> Int {
-            entries.count
-        }
-        
-        func collectionView(
-            _ collectionView: UICollectionView,
-            cellForItemAt indexPath: IndexPath
-        ) -> UICollectionViewCell {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ApertureRingViewCell.id, for: indexPath)
-            guard let cell = cell as? ApertureRingViewCell else { return cell }
-            let data = entries[indexPath.item]
-            cell.contentConfiguration = UIHostingConfiguration { content(data) }
-            return cell
-        }
-    }
-    
     @Binding var selection: Entry
     @Binding var entries: [Entry]
     let feedbackProvidable: HaebitApertureRingFeedbackProvidable
     let content: (Entry) -> Content
     
     func updateUIView(_ uiView: UIViewType, context: Context) {
-        guard let apertureRingView = uiView as? ApertureRingView,
-              let index = entries.firstIndex(of: selection) else { return }
-        context.coordinator.content = content
-        context.coordinator.entries = entries
-        apertureRingView.reload()
-        apertureRingView.select(index: index)
+        guard let apertureRingView = uiView as? ApertureRingView<Content, Entry> else { return }
+        apertureRingView.content = content
+        apertureRingView.update(entries: entries, selection: selection)
     }
     
-    // TODO: Handle exception for invalid index due to entry update.
     func makeUIView(context: Context) -> some UIView {
         ApertureRingView(
             feedbackProvidable: feedbackProvidable,
-            dataSource: context.coordinator
-        ) { selectedIndex in
-            selection = entries[selectedIndex]
+            entries: entries,
+            selection: selection,
+            content: content
+        ) { newSelection in
+            guard selection != newSelection else { return }
+            selection = newSelection
         }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(entries: entries, content: content)
     }
 }
 
@@ -83,7 +47,7 @@ final class ApertureRingViewCell: UICollectionViewCell {
     }
 }
 
-final class ApertureRingView: UIView {
+final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, UICollectionViewDataSource where Content: View, Entry: Hashable {
     private lazy var flowLayout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
@@ -106,24 +70,34 @@ final class ApertureRingView: UIView {
     }()
     
     private let feedbackProvidable: HaebitApertureRingFeedbackProvidable
-    private let selectionCallback: (Int) -> Void
+    private let selectionCallback: (Entry) -> Void
     
     private let cellWidth: CGFloat = 60
     
-    private var currentIndex: Int = .zero
+    private var entries: [Entry] = []
+    private var selection: Entry
+    
+    private(set) var currentIndex: Int = .zero
     private var lastContentOffset: CGPoint = .zero
     private var lastTime: TimeInterval = 0.0
     private var scrollSpeedX: CGFloat = 0.0
 
+    var content: (Entry) -> Content
+
     init(
         feedbackProvidable: HaebitApertureRingFeedbackProvidable,
-        dataSource: UICollectionViewDataSource,
-        didSelectItemAt selectionCallback: @escaping (Int) -> Void
+        entries: [Entry],
+        selection: Entry,
+        content: @escaping (Entry) -> Content,
+        didSelectItemAt selectionCallback: @escaping (Entry) -> Void
     ) {
         self.feedbackProvidable = feedbackProvidable
         self.selectionCallback = selectionCallback
+        self.entries = entries
+        self.selection = selection
+        self.content = content
         super.init(frame: .zero)
-        collectionView.dataSource = dataSource
+        collectionView.dataSource = self
         setupViews()
     }
     
@@ -146,24 +120,23 @@ final class ApertureRingView: UIView {
             collectionView.topAnchor.constraint(equalTo: topAnchor),
             collectionView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
-    }
-    
-    func reload() {
         collectionView.reloadData()
     }
     
-    func select(index: Int) {
-        guard index < collectionView.numberOfItems(inSection: .zero),
-              currentIndex != index else { return }
+    func update(entries: [Entry], selection: Entry) {
+        self.entries = entries
+        collectionView.reloadData()
+        
+        guard let index = entries.firstIndex(of: selection),
+              index != currentIndex, index < entries.count else { return }
+        
         collectionView.scrollToItem(
             at: IndexPath(item: index, section: .zero),
             at: .centeredHorizontally,
             animated: true
         )
     }
-}
 
-extension ApertureRingView: UICollectionViewDelegate {
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         lastContentOffset = scrollView.contentOffset
         lastTime = Date().timeIntervalSince1970
@@ -185,27 +158,48 @@ extension ApertureRingView: UICollectionViewDelegate {
               let cell = collectionView.cellForItem(at: indexPath) as? ApertureRingViewCell,
               (cell.center.x - (frame.width / 4.0)...cell.center.x + (frame.width / 4.0)).contains(offset.x),
               (isOpening ? cell.shouldClickForOpening : cell.shouldClickForClosing) else { return }
-        currentIndex = indexPath.item
         feedbackProvidable.generateClickingFeedback()
         cell.shouldClickForOpening = !isOpening
         cell.shouldClickForClosing = isOpening
-        selectionCallback(indexPath.item)
+        currentIndex = indexPath.item
+        selection = entries[currentIndex]
+        selectionCallback(selection)
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         let offset = CGPoint(x: scrollView.contentOffset.x + frame.width / 2.0, y: scrollView.contentOffset.y)
         guard let indexPath = collectionView.indexPathForItem(at: offset) else { return }
-        currentIndex = indexPath.item
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-        selectionCallback(indexPath.item)
+        currentIndex = indexPath.item
+        selection = entries[currentIndex]
+        selectionCallback(selection)
     }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         guard !decelerate else { return }
         let offset = CGPoint(x: scrollView.contentOffset.x + frame.width / 2.0, y: scrollView.contentOffset.y)
         guard let indexPath = collectionView.indexPathForItem(at: offset) else { return }
-        currentIndex = indexPath.item
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-        selectionCallback(indexPath.item)
+        currentIndex = indexPath.item
+        selection = entries[currentIndex]
+        selectionCallback(selection)
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        numberOfItemsInSection section: Int
+    ) -> Int {
+        entries.count
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        cellForItemAt indexPath: IndexPath
+    ) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ApertureRingViewCell.id, for: indexPath)
+        guard let cell = cell as? ApertureRingViewCell else { return cell }
+        let data = entries[indexPath.item]
+        cell.contentConfiguration = UIHostingConfiguration { content(data) }
+        return cell
     }
 }
