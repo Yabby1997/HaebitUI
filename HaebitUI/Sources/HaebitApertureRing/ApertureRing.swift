@@ -6,26 +6,34 @@
 //  Copyright © 2023 seunghun. All rights reserved.
 //
 
+import AVFAudio
 import UIKit
 import SwiftUI
 
 struct ApertureRing<Content, Entry>: UIViewRepresentable where Content: View, Entry: Hashable {
     @Binding var selection: Entry
     @Binding var entries: [Entry]
-    let feedbackProvidable: HaebitApertureRingFeedbackProvidable
+    @Binding var feedbackStyle: UIImpactFeedbackGenerator.FeedbackStyle
+    @Binding var isMute: Bool
     let content: (Entry) -> Content
     
     func updateUIView(_ uiView: UIViewType, context: Context) {
         guard let apertureRingView = uiView as? ApertureRingView<Content, Entry> else { return }
         apertureRingView.content = content
-        apertureRingView.update(entries: entries, selection: selection)
+        apertureRingView.update(
+            entries: entries,
+            selection: selection,
+            feedbackStyle: feedbackStyle,
+            isMute: isMute
+        )
     }
     
     func makeUIView(context: Context) -> some UIView {
         ApertureRingView(
-            feedbackProvidable: feedbackProvidable,
             entries: entries,
             selection: selection,
+            feedbackStyle: feedbackStyle,
+            isMute: isMute,
             content: content
         ) { newSelection in
             guard selection != newSelection else { return }
@@ -69,7 +77,9 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
         return view
     }()
     
-    private let feedbackProvidable: HaebitApertureRingFeedbackProvidable
+    private var feedbackGenerator: UIImpactFeedbackGenerator
+    private var isMute: Bool
+    
     private let selectionCallback: (Entry) -> Void
     
     private let cellWidth: CGFloat = 60
@@ -85,15 +95,17 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
     var content: (Entry) -> Content
 
     init(
-        feedbackProvidable: HaebitApertureRingFeedbackProvidable,
         entries: [Entry],
         selection: Entry,
+        feedbackStyle: UIImpactFeedbackGenerator.FeedbackStyle,
+        isMute: Bool,
         content: @escaping (Entry) -> Content,
         didSelectItemAt selectionCallback: @escaping (Entry) -> Void
     ) {
-        self.feedbackProvidable = feedbackProvidable
         self.selectionCallback = selectionCallback
         self.entries = entries
+        self.feedbackGenerator = UIImpactFeedbackGenerator(style: feedbackStyle)
+        self.isMute = isMute
         self.selection = selection
         self.content = content
         super.init(frame: .zero)
@@ -123,18 +135,34 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
         collectionView.reloadData()
     }
     
-    func update(entries: [Entry], selection: Entry) {
+    private func generateFeedback() {
+        feedbackGenerator.prepare()
+        feedbackGenerator.impactOccurred()
+        guard isMute == false else { return }
+        AudioServicesPlaySystemSound(1157)
+    }
+    
+    func update(
+        entries: [Entry],
+        selection: Entry,
+        feedbackStyle: UIImpactFeedbackGenerator.FeedbackStyle,
+        isMute: Bool
+    ) {
         self.entries = entries
         collectionView.reloadData()
         
-        guard let index = entries.firstIndex(of: selection),
-              index != currentIndex, index < entries.count else { return }
+        if let index = entries.firstIndex(of: selection),
+           index != currentIndex, index < entries.count {
+            
+            collectionView.scrollToItem(
+                at: IndexPath(item: index, section: .zero),
+                at: .centeredHorizontally,
+                animated: true
+            )
+        }
         
-        collectionView.scrollToItem(
-            at: IndexPath(item: index, section: .zero),
-            at: .centeredHorizontally,
-            animated: true
-        )
+        feedbackGenerator = UIImpactFeedbackGenerator(style: feedbackStyle)
+        self.isMute = isMute
     }
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -158,7 +186,7 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
               let cell = collectionView.cellForItem(at: indexPath) as? ApertureRingViewCell,
               (cell.center.x - (frame.width / 4.0)...cell.center.x + (frame.width / 4.0)).contains(offset.x),
               (isOpening ? cell.shouldClickForOpening : cell.shouldClickForClosing) else { return }
-        feedbackProvidable.generateClickingFeedback()
+        generateFeedback()
         cell.shouldClickForOpening = !isOpening
         cell.shouldClickForClosing = isOpening
         currentIndex = indexPath.item

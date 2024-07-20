@@ -15,11 +15,6 @@ struct HaebitUIDemoApp: App {
         WindowGroup {
             TabView {
                 ApertureRingDemoView()
-                    .environmentObject(
-                        HaebitApertureRingDependencies(
-                            feedbackProvidable: DefaultApertureRingFeedbackProvider()
-                        )
-                    )
                     .tabItem {
                         Text("Ring")
                     }
