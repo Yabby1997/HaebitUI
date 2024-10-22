@@ -149,20 +149,19 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
         isMute: Bool
     ) {
         self.entries = entries
+        self.isMute = isMute
+        feedbackGenerator = UIImpactFeedbackGenerator(style: feedbackStyle)
         collectionView.reloadData()
-        
-        if let index = entries.firstIndex(of: selection),
-           index != currentIndex, index < entries.count {
-            
+        collectionView.performBatchUpdates(nil) { [weak self] _ in
+            guard let self,
+                  let index = entries.firstIndex(of: selection),
+                  index != currentIndex, index < entries.count else { return }
             collectionView.scrollToItem(
                 at: IndexPath(item: index, section: .zero),
                 at: .centeredHorizontally,
                 animated: true
             )
         }
-        
-        feedbackGenerator = UIImpactFeedbackGenerator(style: feedbackStyle)
-        self.isMute = isMute
     }
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
