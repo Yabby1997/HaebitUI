@@ -72,8 +72,9 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
         view.decelerationRate = .init(rawValue: .zero)
         view.bounces = false
         view.isSpringLoaded = false
-        view.delegate = self
         view.backgroundColor = .clear
+        view.delegate = self
+        view.dataSource = self
         return view
     }()
     
@@ -109,8 +110,12 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
         self.selection = selection
         self.content = content
         super.init(frame: .zero)
-        collectionView.dataSource = self
         setupViews()
+        // TODO: Remove this shitty workaround and fix it legitimate way.
+        Task {
+            try? await Task.sleep(for: .milliseconds(100))
+            reload()
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -132,7 +137,6 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
             collectionView.topAnchor.constraint(equalTo: topAnchor),
             collectionView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
-        collectionView.reloadData()
     }
     
     private func generateFeedback() {
@@ -142,28 +146,31 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
         AudioServicesPlaySystemSound(1157)
     }
     
+    private func reload() {
+        collectionView.reloadData()
+        guard let index = entries.firstIndex(of: selection),
+              index != currentIndex, index < entries.count else { return }
+        collectionView.scrollToItem(
+            at: IndexPath(item: index, section: .zero),
+            at: .centeredHorizontally,
+            animated: true
+        )
+    }
+    
     func update(
         entries: [Entry],
         selection: Entry,
         feedbackStyle: UIImpactFeedbackGenerator.FeedbackStyle,
         isMute: Bool
     ) {
-        self.entries = entries
         self.isMute = isMute
         feedbackGenerator = UIImpactFeedbackGenerator(style: feedbackStyle)
-        collectionView.reloadData()
-        collectionView.performBatchUpdates(nil) { [weak self] _ in
-            guard let self,
-                  let index = entries.firstIndex(of: selection),
-                  index != currentIndex, index < entries.count else { return }
-            collectionView.scrollToItem(
-                at: IndexPath(item: index, section: .zero),
-                at: .centeredHorizontally,
-                animated: true
-            )
-        }
+        guard self.entries != entries || self.selection != selection else { return }
+        self.entries = entries
+        self.selection = selection
+        reload()
     }
-
+    
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         lastContentOffset = scrollView.contentOffset
         lastTime = Date().timeIntervalSince1970
@@ -179,7 +186,7 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
         lastTime = currentTime
         
         let isOpening = scrollSpeedX > .zero
-        let offset = CGPoint(x: scrollView.contentOffset.x + frame.width / 2.0, y: scrollView.contentOffset.y)
+        let offset = CGPoint(x: currentOffset.x + frame.width / 2.0, y: currentOffset.y)
         
         guard let indexPath = collectionView.indexPathForItem(at: offset),
               let cell = collectionView.cellForItem(at: indexPath) as? ApertureRingViewCell,
