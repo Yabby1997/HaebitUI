@@ -9,12 +9,11 @@
 import SwiftUI
 
 /// An aperture ring styled value picker.
-public struct HaebitApertureRing<Indicator, Content, Entry>: View where Indicator: View, Content: View, Entry: Hashable {
+public struct HaebitApertureRing<Content, Entry>: View where Content: View, Entry: Hashable {
     @Binding private var selection: Entry
     @Binding private var entries: [Entry]
     @Binding private var feedbackStyle: UIImpactFeedbackGenerator.FeedbackStyle
     @Binding private var isMute: Bool
-    private let centerIndicator: () -> Indicator
     private let content: (Entry) -> Content
     
     /// Creates an aperture ring that displays a center indicator and each entry's content.
@@ -24,46 +23,36 @@ public struct HaebitApertureRing<Indicator, Content, Entry>: View where Indicato
     ///     - entries: An array of values used as the entries for the aperture ring.
     ///     - feedbackStyle: A `UIImpactFeedbackGenerator.FeedbackStyle` that indicates which style to use for generating impact feedback.
     ///     - isMute: A `Bool` value that indicates whether or not to play sound feedback.
-    ///     - centerIndicator: A view that indicates the center point of the aperture ring.
     ///     - content: A view that describes each entry of the aperture ring.
     public init(
         selection: Binding<Entry>,
         entries: Binding<[Entry]>,
         feedbackStyle: Binding<UIImpactFeedbackGenerator.FeedbackStyle>,
         isMute: Binding<Bool>,
-        @ViewBuilder centerIndicator: @escaping () -> Indicator = { EmptyView() },
         @ViewBuilder content: @escaping (Entry) -> Content
     ) {
         self._selection = selection
         self._entries = entries
         self._feedbackStyle = feedbackStyle
         self._isMute = isMute
-        self.centerIndicator = centerIndicator
         self.content = content
     }
     
     public var body: some View {
-        VStack(spacing: .zero) {
-            centerIndicator()
-            ZStack {
-                EmptyView()
-                ApertureRing(
-                    selection: $selection,
-                    entries: $entries,
-                    feedbackStyle: $feedbackStyle,
-                    isMute: $isMute,
-                    content: content
-                )
-                .frame(maxHeight: 30)
-            }
-        }
+        ApertureRing(
+            selection: $selection,
+            entries: $entries,
+            feedbackStyle: $feedbackStyle,
+            isMute: $isMute,
+            content: content
+        )
     }
 }
 
-extension HaebitApertureRing: Equatable {
+extension HaebitApertureRing: @preconcurrency Equatable {
     public static func == (
-        lhs: HaebitApertureRing<Indicator, Content, Entry>,
-        rhs: HaebitApertureRing<Indicator, Content, Entry>
+        lhs: HaebitApertureRing<Content, Entry>,
+        rhs: HaebitApertureRing<Content, Entry>
     ) -> Bool {
         lhs.entries == rhs.entries && lhs.selection == rhs.selection
     }
@@ -77,10 +66,7 @@ extension HaebitApertureRing: Equatable {
         entries: $entries,
         feedbackStyle: .constant(.heavy),
         isMute: .constant(false)
-    ) {
-        Color(.green)
-            .frame(width: 5, height: 5)
-    } content: { data in
+    ) { data in
         Text(data)
     }
 }

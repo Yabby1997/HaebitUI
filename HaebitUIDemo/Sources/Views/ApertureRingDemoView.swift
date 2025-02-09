@@ -29,51 +29,74 @@ enum FeedbackStyle: String, CaseIterable, Identifiable {
 }
 
 struct ApertureRingDemoView: View {
-    @State var selection: Float = 1.4
-    @State var entries: [Float] = [1.0, 1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22]
-    @State var feedbackStyle: FeedbackStyle = .heavy
-    @State var isMute: Bool = false
+    @StateObject var viewModel = ViewModel()
     
     var body: some View {
         VStack {
             Spacer()
-            Text(String(format: "%.1f", selection))
+            Text(String(format: "%.1f", viewModel.selection))
                 .font(.largeTitle)
                 .fontWeight(.bold)
             VStack {
-                Picker("", selection: $feedbackStyle) {
+                Picker("", selection: $viewModel.color) {
+                    ForEach([Color.red, Color.green, Color.blue], id: \.self) { color in
+                        Text("\(color.description)")
+                    }
+                }
+                .pickerStyle(.segmented)
+                Picker("", selection: $viewModel.feedbackStyle) {
                     ForEach(FeedbackStyle.allCases) { feedbackStyle in
                         Text(feedbackStyle.rawValue).tag(feedbackStyle)
                     }
                 }
                 .pickerStyle(.segmented)
-                Toggle(isOn: $isMute) {
+                Toggle(isOn: $viewModel.isMute) {
                     Text("Mute")
                 }
             }
             .padding()
-            HaebitApertureRing(
-                selection: $selection,
-                entries: $entries,
-                feedbackStyle: Binding(get: { feedbackStyle.impactGeneraterFeedbackStyle }, set: { _ in }),
-                isMute: $isMute
-            ) {
+            VStack {
                 Circle()
                     .frame(width: 5, height: 5)
                     .foregroundStyle(.red)
-            } content: { data in
-                Text(String(format: "%.1f", data))
-                    .fontWeight(.bold)
-                    .foregroundStyle(.white)
+                HaebitApertureRing(
+                    selection: $viewModel.selection,
+                    entries: $viewModel.entries,
+                    feedbackStyle: Binding(get: { viewModel.feedbackStyle.impactGeneraterFeedbackStyle }, set: { _ in }),
+                    isMute: $viewModel.isMute
+                ) { data in
+                    RingView(viewModel: viewModel, data: data)
+                }
+                .frame(height: 30)
+                .shadow(radius: 5)
             }
-            .shadow(radius: 5)
             Spacer()
         }
-        .onAppear {
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                selection = 11
-            }
-        }
+    }
+}
+
+protocol RingViewModel: ObservableObject {
+    var color: Color { get set }
+}
+
+class ViewModel: ObservableObject {
+    @Published var selection: Float = 22
+    @Published var entries: [Float] = [1.0, 1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22]
+    @Published var feedbackStyle: FeedbackStyle = .heavy
+    @Published var isMute: Bool = false
+    @Published var color: Color = .white
+}
+
+extension ViewModel: RingViewModel {}
+
+struct RingView<ViewModel: RingViewModel>: View {
+    @StateObject var viewModel: ViewModel
+    let data: Float
+    
+    var body: some View {
+        Text(String(format: "%.1f", data))
+            .fontWeight(.bold)
+            .foregroundStyle(viewModel.color)
+            .animation(.easeInOut, value: viewModel.color)
     }
 }
