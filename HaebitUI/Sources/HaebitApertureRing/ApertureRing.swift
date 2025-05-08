@@ -13,6 +13,7 @@ import SwiftUI
 struct ApertureRing<Content, Entry>: UIViewRepresentable where Content: View, Entry: Hashable {
     @Binding var selection: Entry
     @Binding var entries: [Entry]
+    let cellWidth: CGFloat
     @Binding var feedbackStyle: UIImpactFeedbackGenerator.FeedbackStyle
     @Binding var isMute: Bool
     let content: (Entry) -> Content
@@ -32,6 +33,7 @@ struct ApertureRing<Content, Entry>: UIViewRepresentable where Content: View, En
         ApertureRingView(
             entries: entries,
             selection: selection,
+            cellWidth: cellWidth,
             feedbackStyle: feedbackStyle,
             isMute: isMute,
             content: content
@@ -83,7 +85,7 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
     
     private let selectionCallback: (Entry) -> Void
     
-    private let cellWidth: CGFloat = 60
+    private let cellWidth: CGFloat
     
     private var entries: [Entry] = []
     private var selection: Entry
@@ -98,6 +100,7 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
     init(
         entries: [Entry],
         selection: Entry,
+        cellWidth: CGFloat,
         feedbackStyle: UIImpactFeedbackGenerator.FeedbackStyle,
         isMute: Bool,
         content: @escaping (Entry) -> Content,
@@ -105,6 +108,7 @@ final class ApertureRingView<Content, Entry>: UIView, UICollectionViewDelegate, 
     ) {
         self.selectionCallback = selectionCallback
         self.entries = entries
+        self.cellWidth = cellWidth
         self.feedbackGenerator = UIImpactFeedbackGenerator(style: feedbackStyle)
         self.isMute = isMute
         self.selection = selection

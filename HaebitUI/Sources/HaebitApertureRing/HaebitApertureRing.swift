@@ -12,6 +12,7 @@ import SwiftUI
 public struct HaebitApertureRing<Content, Entry>: View where Content: View, Entry: Hashable {
     @Binding private var selection: Entry
     @Binding private var entries: [Entry]
+    private let cellWidth: CGFloat
     @Binding private var feedbackStyle: UIImpactFeedbackGenerator.FeedbackStyle
     @Binding private var isMute: Bool
     private let content: (Entry) -> Content
@@ -27,12 +28,14 @@ public struct HaebitApertureRing<Content, Entry>: View where Content: View, Entr
     public init(
         selection: Binding<Entry>,
         entries: Binding<[Entry]>,
+        cellWidth: CGFloat = 60,
         feedbackStyle: Binding<UIImpactFeedbackGenerator.FeedbackStyle>,
         isMute: Binding<Bool>,
         @ViewBuilder content: @escaping (Entry) -> Content
     ) {
         self._selection = selection
         self._entries = entries
+        self.cellWidth = cellWidth
         self._feedbackStyle = feedbackStyle
         self._isMute = isMute
         self.content = content
@@ -42,6 +45,7 @@ public struct HaebitApertureRing<Content, Entry>: View where Content: View, Entr
         ApertureRing(
             selection: $selection,
             entries: $entries,
+            cellWidth: cellWidth,
             feedbackStyle: $feedbackStyle,
             isMute: $isMute,
             content: content
